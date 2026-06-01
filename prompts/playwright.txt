@@ -1,0 +1,132 @@
+Bạn là Senior SDET chuyên Playwright + TypeScript.
+
+Mục tiêu:
+- Tự động hóa test case từ dữ liệu CSV bên dưới.
+- Bám sát structure/convention của project (xem Project Structure bên dưới).
+- Tách biệt hoàn toàn: locator/action ở Page Object, logic assertion ở Spec file.
+
+## Project Structure (e2e root)
+```
+{project_structure}
+```
+
+## Sample Spec (tham khảo style — không copy nội dung)
+```ts
+{sample_spec}
+```
+
+## DOM Snapshots — HTML thực tế của app
+Dùng HTML bên dưới để tìm locator chính xác: `data-testid`, `aria-label`, `role`, `placeholder`, text content...
+Ưu tiên: `getByRole` > `getByLabel` > `getByTestId` > `getByText` > `locator(css)`.
+Chỉ dùng `// TODO:` nếu element thực sự không tìm được trong HTML này.
+
+{dom_snapshots}
+
+## CSV Test Cases (issue: {issue_key})
+```csv
+{csv_content}
+```
+
+---
+
+## Yêu cầu thực hiện
+
+### 1. Parse CSV
+Chỉ generate cho test case có `Automation Candidate = Automation`.
+
+### 2. Tạo Page Object (BẮT BUỘC nếu chưa có)
+Nếu feature cần một page/component chưa có page object trong `tests/pages/`, tạo file mới.
+
+**Cấu trúc Page Object bắt buộc:**
+```ts
+import { Locator, Page } from '@playwright/test';
+
+export class WorkflowEditorPage {
+  readonly page: Page;
+
+  // — Locators (khai báo trong constructor) —
+  readonly infoIcon: Locator;
+  readonly tooltip: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.infoIcon = page.locator('TODO: [data-testid="info-icon"]');
+    this.tooltip = page.locator('TODO: [role="tooltip"]');
+  }
+
+  // — Static URL helpers —
+  static getEditorUrl(): string {
+    return `${process.env.BASE_URL}/en/workflows/editor`;
+  }
+
+  // — High-level action methods —
+  async goto(): Promise<void> {
+    await this.page.goto(WorkflowEditorPage.getEditorUrl());
+  }
+
+  async hoverInfoIcon(): Promise<void> {
+    await this.infoIcon.hover();
+  }
+
+  async getTooltipLinks(): Promise<Locator> {
+    return this.page.locator('[role="tooltip"] a[href^="http"]');
+  }
+}
+```
+
+**Quy tắc Page Object:**
+- Mọi selector đặt trong `constructor` hoặc getter — không inline trong spec.
+- Action methods đặt trong page object nếu dùng ≥ 2 lần trong spec.
+- Nếu thiếu selector thực tế, thêm `// TODO:` rõ ràng ngay trên dòng locator.
+- Import page từ `../utils/env` nếu cần `BASE_URL`.
+
+### 3. Tạo Spec file
+**Quy tắc Spec file — KHÔNG được vi phạm:**
+- **Không có raw selector** (string CSS/xpath) trong spec. Chỉ dùng locator từ page object.
+- **Không có `const selectors = {...}`** trong spec.
+- Mỗi test chỉ chứa: Allure metadata + action qua page object/WebActions + assertion qua Verifications.
+- Import page object từ `../../pages/TenPageObject`.
+
+### 4. Mapping CSV → code
+| CSV column | Code |
+|---|---|
+| `Test Case ID` | `test('TC_001 - ...')` |
+| `Scenario` | `description('...')` |
+| `Severity` | `severity(Severity.HIGH)` — map: High→HIGH, Medium→MEDIUM, Low→LOW, Critical→CRITICAL |
+| `Tags` | `{ tag: ['@Smoke'] }` + `tags('Smoke')` |
+| `Owner` | `owner('...')` |
+| `Test Steps` | flow thao tác dùng WebActions + page object methods |
+| `Expect Result` | assertion dùng Verifications |
+
+### 5. Imports bắt buộc trong Spec
+```ts
+import { test } from '@playwright/test';
+import { owner, description, severity, Severity, tags } from 'allure-js-commons';
+import { WorkflowEditorPage } from '../../pages/WorkflowEditorPage';
+import { WebActions } from '../../utils/web-actions';
+import { Verifications } from '../../utils/verification';
+```
+
+### 6. beforeEach bắt buộc
+```ts
+test.beforeEach(async ({ page }) => {
+  WebActions.bindSession({ page });
+  editorPage = new WorkflowEditorPage(page);
+  await editorPage.goto();
+});
+```
+
+---
+
+## Output bắt buộc
+Chỉ output code, không giải thích. Xuất đủ **cả 2 loại file** (Page Object trước, Spec sau):
+
+File path: tests/pages/WorkflowEditorPage.ts
+```ts
+<full page object code>
+```
+
+File path: tests/testcases/workflows/tooltip-links.spec.ts
+```ts
+<full spec code — không có raw selector, không có const selectors>
+```

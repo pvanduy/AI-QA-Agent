@@ -1,0 +1,79 @@
+Act as a Senior QA Engineer / QA Lead.
+
+Your task is to analyze the following requirement and generate a comprehensive test design.
+
+{requirement}
+
+---
+
+Step 1: Clarify Requirement
+- Summarize the requirement in your own words
+- List assumptions (if any)
+- List missing or ambiguous points that need clarification
+
+---
+
+Step 2: Identify Test Scenarios
+- List high-level test scenarios
+- Group them by:
+  - Functional
+  - Negative
+  - Edge cases
+  - Integration (if applicable)
+  - UI/UX (if applicable)
+
+---
+
+Step 3: Generate Detailed Test Cases
+For each scenario, 
+- Group them by:
+  - Functional
+  - Negative
+  - Edge cases
+  - Integration (if applicable)
+  - UI/UX (if applicable)
+
+- Provide:
+  - Test Case ID (TC_XXX)
+  - Requirement ID (bắt buộc format: `AC.01`, `AC.02`, ... hoặc ` `, ...)
+  - Type (Functional, Negative, Edge cases, Integration (if applicable), UI/UX (if applicable), ...)
+  - Scenario
+  - Test Data
+  - Test Steps (bắt buộc format xuống dòng: Step1. ... [newline] Step2. ... [newline] Step3. ...)
+  - Actual Result (N/A)
+  - Expected Result (Viết ngắn gọn dễ hiểu)
+  - Severity (Critical/High/Medium/Low)
+  - Tags (Smoke / Regression / Sanity)
+  - Automation Candidate (Manual / Automation)
+  - Status (In-Test/ Done/ N/A)
+  - Owner (John)
+  - Note (Nếu thiếu thông tin để test, vẫn tạo test case và điền [CẦN LÀM RÕ])
+
+---
+
+Quy tắc coverage bắt buộc:
+1. Mỗi requirement item phải có ít nhất 1 test case Happy Path.
+2. Mỗi business rule/validation phải có test case Negative hoặc Boundary tương ứng.
+3. Mỗi luồng lỗi phải có test case Error Handling.
+4. Mỗi rule phân quyền phải có test case Permission.
+5. Không gộp nhiều scenario khác nhau vào 1 test case.
+
+Output bắt buộc (để import Google Sheets):
+- Chỉ trả về 1 khối CSV (comma-separated), không thêm giải thích.
+- Dòng đầu là header đúng thứ tự cột:
+Test Case ID,Requirement ID,Type,Scenario,Test Data,Test Steps,Actual Result,Expect Result,Severity,Tags,Automation Candidate,Status,Owner,Note
+- Mỗi test case là 1 dòng.
+- Cột `Requirement ID` chỉ được dùng dạng `AC.xx` hoặc ` ` (ví dụ: `AC.01`, ` `).
+- Không thêm tiền tố issue key/project key trong `Requirement ID` (ví dụ sai: `MART-1897 AC.01`).
+- Cột `Test Steps` bắt buộc theo format:
+  Step1. <mô tả bước 1>
+  Step2. <mô tả bước 2>
+  Step3. <mô tả bước 3>
+- Mỗi step phải xuống dòng trong cùng một cell CSV (line break), không dùng ` | `.
+- Vì có line break, bắt buộc bọc toàn bộ cell `Test Steps` bằng dấu `"` theo chuẩn CSV.
+- Các cột khác không xuống dòng trong cell.
+- Không dùng step không đánh số; mỗi step phải là một hành động rõ ràng, ngắn gọn.
+- Nếu cell có dấu phẩy `,` hoặc dấu nháy kép `"`, phải bọc cell bằng dấu `"` theo chuẩn CSV; dấu `"` bên trong cell phải escape thành `""`.
+- Không thêm cột, không thiếu cột.
+
+Hãy xuất kết quả ngay theo đúng định dạng CSV.

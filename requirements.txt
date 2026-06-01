@@ -1,0 +1,5 @@
+jira==3.10.5
+openai==2.38.0
+anthropic>=0.50.0
+playwright>=1.40.0
+python-dotenv==1.1.0
