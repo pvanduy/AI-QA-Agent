@@ -1,31 +1,14 @@
-from openai import OpenAI
-from pathlib import Path
-import os
+from .base import BaseAgent
 
 
-class TestCaseAgent:
-    def __init__(self):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.prompt_file = Path(__file__).resolve().parents[1] / "prompts" / "testcase.txt"
-        self.output_dir = Path(__file__).resolve().parents[1] / "outputs" / "testcases"
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+class TestCaseAgent(BaseAgent):
+    _prompt_name = "testcase.txt"
+    _output_subdir = "testcases"
+    _output_ext = ".csv"
 
     def run(self, story: dict, issue_key: str) -> str:
         prompt = self.prompt_file.read_text(encoding="utf-8").format(requirement=story)
-
-        response = self.client.responses.create(
-            model=os.getenv("MODEL"),
-            input=prompt,
-        )
-
-        output_text = response.output_text.strip()
-        if output_text.startswith("```"):
-            lines = output_text.splitlines()
-            if len(lines) >= 2 and lines[-1].strip() == "```":
-                output_text = "\n".join(lines[1:-1]).strip()
-
-        (self.output_dir / f"{issue_key}.csv").write_text(output_text, encoding="utf-8")
-        return output_text
+        return self._save(issue_key, self._call_llm(prompt))
 
 
 if __name__ == "__main__":

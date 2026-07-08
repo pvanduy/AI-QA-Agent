@@ -2,17 +2,22 @@
 Flow-based DOM capture service.
 
 Flow được định nghĩa trong config/capture_flows.py — mỗi step là 1 action:
-  {"goto": url}                             — navigate
-  {"wait_for": selector}                    — chờ element xuất hiện
-  {"wait_for_url": regex_pattern}           — chờ URL khớp pattern
-  {"click": selector}                       — click element
-  {"fill": selector, "value": text}         — điền text
-  {"wait_ms": ms}                           — sleep
-  {"capture": name}                         — lưu HTML snapshot
+  {"goto": url}                                        — navigate
+  {"wait_for": selector}                               — chờ element xuất hiện
+  {"wait_for_url": regex_pattern}                      — chờ URL khớp pattern
+  {"click": selector}                                  — click element (first match)
+  {"click_nth": selector, "n": index}                  — click element thứ n (0-indexed)
+  {"click_role": role, "name": text, "exact": bool}    — click by ARIA role
+  {"fill": selector, "value": text}                    — điền text
+  {"fill_role": role, "name": text, "value": text}     — fill by ARIA role
+  {"click_text": text, "exact": bool}                  — click by visible text
+  {"wait_ms": ms}                                      — sleep
+  {"capture": name}                                    — lưu .html + .png + .aria.json
 """
 
 from playwright.sync_api import sync_playwright, Page
 from pathlib import Path
+import json
 import os
 import re
 
@@ -21,6 +26,8 @@ MAX_CHARS = 80_000
 
 
 def _clean_html(html: str) -> str:
+    # Drop <head> entirely — CSS/font links add noise without selector value
+    html = re.sub(r"<head[^>]*>.*?</head>", "", html, flags=re.DOTALL | re.IGNORECASE)
     for tag in ("script", "style", "noscript", "svg"):
         html = re.sub(rf"<{tag}[^>]*>.*?</{tag}>", "", html, flags=re.DOTALL | re.IGNORECASE)
     html = re.sub(r'\s(on\w+|data-v-\w+)="[^"]*"', "", html)
@@ -84,11 +91,14 @@ def _run_step(page: Page, step: dict) -> str | None:
     elif "click" in step:
         page.locator(step["click"]).first.click()
 
+    elif "click_nth" in step:
+        page.locator(step["click_nth"]).nth(step["n"]).click()
+
     elif "fill" in step:
         page.locator(step["fill"]).first.fill(step["value"])
 
     elif "click_role" in step:
-        page.get_by_role(step["click_role"], name=step["name"]).first.click()
+        page.get_by_role(step["click_role"], name=step["name"], exact=step.get("exact", False)).first.click()
 
     elif "fill_role" in step:
         page.get_by_role(step["fill_role"], name=step["name"]).first.fill(step["value"])
@@ -140,18 +150,41 @@ def capture(flows: list[dict], force: bool = False) -> dict[str, str]:
         )
         page = context.new_page()
 
-        for step in flows:
+        debug_dir = SNAPSHOTS_DIR / "debug"
+
+        for i, step in enumerate(flows):
             action = next(iter(step))
             print(f"[flow]  {action}: {list(step.values())[0]}")
 
-            capture_name = _run_step(page, step)
+            try:
+                capture_name = _run_step(page, step)
+            except Exception as e:
+                # Save screenshot so we know exactly where the flow broke
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                shot = debug_dir / f"step{i:02d}_{action}.png"
+                page.screenshot(path=str(shot))
+                print(f"[fail]  step {i} ({action}) — {e} → {shot.name}")
+                raise
 
             if capture_name and capture_name in to_run:
                 html = _clean_html(page.content())
-                snap_path = SNAPSHOTS_DIR / f"{capture_name}.html"
-                snap_path.write_text(html, encoding="utf-8")
+                (SNAPSHOTS_DIR / f"{capture_name}.html").write_text(html, encoding="utf-8")
                 results[capture_name] = html
-                print(f"[done]  {snap_path.name} ({len(html):,} chars)")
+
+                # Screenshot alongside HTML for visual context
+                page.screenshot(
+                    path=str(SNAPSHOTS_DIR / f"{capture_name}.png"),
+                    full_page=False,
+                )
+
+                # Accessibility tree — compact, role/name ready for getByRole()
+                aria = page.accessibility.snapshot()
+                if aria:
+                    (SNAPSHOTS_DIR / f"{capture_name}.aria.json").write_text(
+                        json.dumps(aria, ensure_ascii=False, indent=2), encoding="utf-8"
+                    )
+
+                print(f"[done]  {capture_name}.html ({len(html):,} chars) + .png + .aria.json")
 
         browser.close()
 

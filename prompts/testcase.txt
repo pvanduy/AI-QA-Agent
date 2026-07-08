@@ -73,7 +73,8 @@ Test Case ID,Requirement ID,Type,Scenario,Test Data,Test Steps,Actual Result,Exp
 - Vì có line break, bắt buộc bọc toàn bộ cell `Test Steps` bằng dấu `"` theo chuẩn CSV.
 - Các cột khác không xuống dòng trong cell.
 - Không dùng step không đánh số; mỗi step phải là một hành động rõ ràng, ngắn gọn.
-- Nếu cell có dấu phẩy `,` hoặc dấu nháy kép `"`, phải bọc cell bằng dấu `"` theo chuẩn CSV; dấu `"` bên trong cell phải escape thành `""`.
+- BẮT BUỘC bọc TẤT CẢ các cột bằng dấu `"` theo chuẩn CSV, kể cả cột không chứa dấu phẩy (ví dụ: `"TC_001"`, `"AC.01"`, `"Medium"`). Không được bỏ sót bất kỳ cột nào.
+- Dấu `"` bên trong nội dung cell phải escape thành `""`.
 - Không thêm cột, không thiếu cột.
 
 Hãy xuất kết quả ngay theo đúng định dạng CSV.
