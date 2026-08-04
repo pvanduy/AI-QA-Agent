@@ -39,7 +39,7 @@ For each scenario,
   - Type (Functional, Negative, Edge cases, Integration (if applicable), UI/UX (if applicable), ...)
   - Scenario
   - Test Data
-  - Test Steps (bắt buộc format xuống dòng: Step1. ... [newline] Step2. ... [newline] Step3. ...)
+  - Test Steps (bắt buộc format xuống dòng THẬT (nhấn Enter), TUYỆT ĐỐI KHÔNG dùng 2 ký tự `\n` dạng chữ: Step1. ... <xuống dòng thật> Step2. ... <xuống dòng thật> Step3. ...)
   - Actual Result (N/A)
   - Expected Result (Viết ngắn gọn dễ hiểu)
   - Severity (Critical/High/Medium/Low)
@@ -69,8 +69,8 @@ Test Case ID,Requirement ID,Type,Scenario,Test Data,Test Steps,Actual Result,Exp
   Step1. <mô tả bước 1>
   Step2. <mô tả bước 2>
   Step3. <mô tả bước 3>
-- Mỗi step phải xuống dòng trong cùng một cell CSV (line break), không dùng ` | `.
-- Vì có line break, bắt buộc bọc toàn bộ cell `Test Steps` bằng dấu `"` theo chuẩn CSV.
+- Mỗi step phải xuống dòng THẬT (ký tự newline thực sự, giống nhấn phím Enter) trong cùng một cell CSV, KHÔNG dùng ` | `, và TUYỆT ĐỐI KHÔNG dùng chuỗi ký tự `\n` (backslash + n) — đó chỉ là văn bản, Google Sheets sẽ hiển thị nguyên chữ `\n` thay vì xuống dòng.
+- Vì có line break thật bên trong, bắt buộc bọc toàn bộ cell `Test Steps` bằng dấu `"` theo chuẩn CSV (RFC 4180 cho phép newline thật bên trong cell được quote).
 - Các cột khác không xuống dòng trong cell.
 - Không dùng step không đánh số; mỗi step phải là một hành động rõ ràng, ngắn gọn.
 - BẮT BUỘC bọc TẤT CẢ các cột bằng dấu `"` theo chuẩn CSV, kể cả cột không chứa dấu phẩy (ví dụ: `"TC_001"`, `"AC.01"`, `"Medium"`). Không được bỏ sót bất kỳ cột nào.
