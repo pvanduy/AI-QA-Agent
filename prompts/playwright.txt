@@ -15,12 +15,12 @@ Mục tiêu:
 {sample_spec}
 ```
 
-## DOM Snapshots — HTML thực tế của app
-Dùng HTML bên dưới để tìm locator chính xác: `data-testid`, `aria-label`, `role`, `placeholder`, text content...
-Ưu tiên: `getByRole` > `getByLabel` > `getByTestId` > `getByText` > `locator(css)`.
-Chỉ dùng `// TODO:` nếu element thực sự không tìm được trong HTML này.
+## DOM — HTML thực tế của các node (paste từ DevTools)
+Dùng để tìm locator chính xác: `role`, `aria-label`, `aria-selected`, `id`, `class`, text content.
+Ưu tiên: `getByRole` > `getByLabel` > `getByText` > `locator(css)`.
+Chỉ dùng `// TODO:` nếu element thực sự không tìm được trong HTML bên dưới.
 
-{dom_snapshots}
+{dom_context}
 
 ## CSV Test Cases (issue: {issue_key})
 ```csv
@@ -32,7 +32,8 @@ Chỉ dùng `// TODO:` nếu element thực sự không tìm được trong HTML
 ## Yêu cầu thực hiện
 
 ### 1. Parse CSV
-Chỉ generate cho test case có `Automation Candidate = Automation`.
+Tất cả các dòng trong CSV đã được lọc sẵn — **tất cả đều phải được generate, không được bỏ sót dòng nào**.
+Nếu thiếu DOM hoặc chưa biết selector: thêm `// TODO: [mô tả element cần tìm]` vào Page Object và tiếp tục generate test đó bình thường.
 
 ### 2. Tạo Page Object (BẮT BUỘC nếu chưa có)
 Nếu feature cần một page/component chưa có page object trong `tests/pages/`, tạo file mới.

@@ -4,7 +4,7 @@ load_dotenv()
 import os
 import sys
 from pathlib import Path
-from services import JiraClient, capture_dom
+from services import JiraClient
 from agents import ReviewAgent, TestCaseAgent, AutomationAgent
 
 OUTPUT_ROOT = Path(__file__).resolve().parent / "outputs"
@@ -20,14 +20,6 @@ def load_or_run(cache_path: Path, run_fn, label: str) -> str:
 
 def run_pipeline(issue_key: str) -> None:
     print(f"\n{'='*50}\n  {issue_key}\n{'='*50}")
-
-    # ── DOM snapshots (chạy 1 lần, cache theo tên snapshot) ────────────────
-    try:
-        from config.capture_flows import FLOWS
-        if FLOWS:
-            capture_dom(FLOWS)
-    except ImportError:
-        pass
 
     # ── Lazy Jira: chỉ kết nối khi stage thực sự cần run ───────────────────
     _story: dict | None = None
@@ -58,15 +50,12 @@ def run_pipeline(issue_key: str) -> None:
 
 
 def resolve_issue_keys() -> list[str]:
-    if len(sys.argv) > 1:
-        return [k.strip() for k in sys.argv[1:] if k.strip()]
-
-    env_keys = os.getenv("ISSUE_KEYS", "")
-    keys = [k.strip() for k in env_keys.split(",") if k.strip()]
+    import re
+    raw = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else os.getenv("ISSUE_KEYS", "")
+    keys = [k for k in re.split(r"[\s,]+", raw) if k]
     if keys:
         return keys
-
-    print("Không tìm thấy issue key .env")
+    print("Không tìm thấy issue key — set ISSUE_KEYS hoặc truyền qua argv")
     sys.exit(1)
 
 
